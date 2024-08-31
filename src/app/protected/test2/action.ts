@@ -38,61 +38,69 @@ export async function fetchVideosWithTags() {
   return formattedData
 }
 
-export async function fetchVideosWithLikesAndComments() {
-  const { data, error } = await supabase.from('videos').select(`
-    *,
-    users!user_id (
-      username,
-      avatar
-    ),
-    likes (
-      user_id
-    ),
-    comments (
-      content,
-      users (
+export async function fetchVideoWithLikesAndComments(videoId: number) {
+  const { data, error } = await supabase
+    .from('videos')
+    .select(
+      `
+      *,
+      users!user_id (
         username,
         avatar
+      ),
+      likes (
+        user_id
+      ),
+      comments (
+        content,
+        created_at,
+        users (
+          username,
+          avatar
+        )
+      ),
+      video_tags (
+        tags (
+          name
+        )
+      ),
+      video_references (
+        reference_items (
+          url
+        )
       )
-    ),
-    video_tags (
-      tags (
-        name
-      )
-    ),
-    video_references (
-      reference_items (
-        url
-      )
+    `
     )
-  `)
+    .eq('id', videoId)
+    .single()
 
   if (error) {
     throw new Error(error.message)
   }
 
-  const formattedData = data.map((video) => ({
-    ...video,
-    username: video.users.username,
-    avatar: video.users.avatar,
+  const formattedData = {
+    ...data,
+    username: data.users.username,
+    avatar: data.users.avatar,
     users: undefined,
-    likes_count: video.likes.length,
-    comments_count: video.comments.length,
-    comments: video.comments
+    likes_count: data.likes.length,
+    comments_count: data.comments.length,
+    comments: data.comments
       .map((comment) => ({
         content: comment.content,
         username: comment.users.username,
         avatar: comment.users.avatar,
+        created_at: comment.created_at,
       }))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
-    tags: video.video_tags.map((tag: { tags: { name: string } }) => tag.tags.name),
-    references: video.video_references.map(
+    tags: data.video_tags.map((tag: { tags: { name: string } }) => tag.tags.name),
+    references: data.video_references.map(
       (vr: { reference_items: { url: string } }) => vr.reference_items.url
     ),
     likes: undefined,
     video_tags: undefined,
     video_references: undefined,
-  }))
+  }
 
   return formattedData
 }
