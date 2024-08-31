@@ -32,12 +32,10 @@ export default function Test2() {
         const tagsData = await fetchVideosWithTags()
         setVideosWithTags(tagsData)
 
-        // 例として、最初の動画のIDを使用
-        if (tagsData.length > 0) {
-          const firstVideoId = tagsData[0].id
-          const likesCommentsData = await fetchVideoWithLikesAndComments(firstVideoId)
-          setVideoWithLikesAndComments(likesCommentsData)
-        }
+        // 特定のビデオIDを直接指定
+        const specificVideoId = 2 // ここで希望のビデオIDを指定
+        const likesCommentsData = await fetchVideoWithLikesAndComments(specificVideoId)
+        setVideoWithLikesAndComments(likesCommentsData)
       } catch (error) {
         setError((error as Error).message)
       }
